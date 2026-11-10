@@ -3,23 +3,23 @@ name: Build & Release USBVolumeController
 on:
   push:
     tags:
-      - 'v*'            # Triggers on version tags like v1.0.0, v1.0.1, etc.
-  workflow_dispatch:   # Allows manual trigger from the GitHub Actions tab
+      - 'v*'
+  workflow_dispatch:
 
 jobs:
   build:
     name: Build, Package & Release
-    runs-on: macos-14   # Apple Silicon macOS Sonoma runner
+    runs-on: macos-15 # GitHub-hosted Apple Silicon runner (macos-14 retired 2026-11-02)
 
     permissions:
-      contents: write  # Grants permission to create releases and upload assets
+      contents: write
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+        run: sudo xcode-select -s /Applications/Xcode.app
 
       - name: Build Application (Universal Binary)
         run: |
@@ -38,14 +38,8 @@ jobs:
         run: |
           mkdir -p dist
           APP_PATH="./build/Build/Products/Release/USBVolumeController.app"
-          
-          # Ensure execution permissions
           chmod -R 755 "$APP_PATH"
-          
-          # Ad-hoc sign the bundle cleanly inside the runner
           codesign --force --deep --sign - "$APP_PATH"
-          
-          # Archive using ditto to preserve macOS metadata and symlinks
           ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" dist/USBVolumeController-macOS.zip
 
       - name: Publish GitHub Release
@@ -59,22 +53,21 @@ jobs:
           generate_release_notes: true
           body: |
             ### USBVolumeController (${{ github.ref_name }})
-            
+
             Native macOS Menu Bar volume controller for external USB DACs (such as FiiO K7) using BlackHole 2ch audio loopback.
-            
+
             #### Prerequisites
-            Ensure BlackHole 2ch is installed on your Mac before running:
+            Ensure BlackHole 2ch is installed before running:
             ```bash
             brew install blackhole-2ch
             ```
-            
-            #### Installation & Running
-            1. Download and unzip `USBVolumeController-macOS.zip`.
-            2. Drag `USBVolumeController.app` into `/Applications`.
-            3. Since this release is ad-hoc signed, remove the Gatekeeper quarantine flag:
+
+            #### Running on macOS
+            1. Unzip `USBVolumeController-macOS.zip` and move `USBVolumeController.app` to `/Applications`.
+            2. Remove the Gatekeeper quarantine attribute:
                ```bash
                xattr -cr /Applications/USBVolumeController.app
                ```
-            4. Launch the app and grant **Accessibility** permissions under **System Settings > Privacy & Security > Accessibility** when prompted[cite: 14].
+            3. Grant **Accessibility** permissions under **System Settings > Privacy & Security > Accessibility** when prompted to enable hardware volume keys (F11/F12).
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
