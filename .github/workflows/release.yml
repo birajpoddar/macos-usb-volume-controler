@@ -1,4 +1,4 @@
-name: Build & Release USBVolumeController
+name: Build & Release USBSoundControl
 
 on:
   push:
@@ -24,8 +24,8 @@ jobs:
       - name: Build Application (Universal Binary)
         run: |
           xcodebuild clean build \
-            -project USBVolumeController.xcodeproj \
-            -scheme USBVolumeController \
+            -project USBSoundControl_Loopback.xcodeproj \
+            -target USBSoundControl \
             -configuration Release \
             -derivedDataPath ./build \
             ARCHS="arm64 x86_64" \
@@ -37,22 +37,22 @@ jobs:
       - name: Package Application (.zip)
         run: |
           mkdir -p dist
-          APP_PATH="./build/Build/Products/Release/USBVolumeController.app"
+          APP_PATH="./build/Build/Products/Release/USBSoundControl.app"
           chmod -R 755 "$APP_PATH"
           codesign --force --deep --sign - "$APP_PATH"
-          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" dist/USBVolumeController-macOS.zip
+          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" dist/USBSoundControl-macOS.zip
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: dist/USBVolumeController-macOS.zip
-          name: USBVolumeController ${{ github.ref_name }}
+          files: dist/USBSoundControl-macOS.zip
+          name: USBSoundControl ${{ github.ref_name }}
           draft: false
           prerelease: false
           generate_release_notes: true
           body: |
-            ### USBVolumeController (${{ github.ref_name }})
+            ### USBSoundControl (${{ github.ref_name }})
 
             Native macOS Menu Bar volume controller for external USB DACs (such as FiiO K7) using BlackHole 2ch audio loopback.
 
@@ -63,10 +63,10 @@ jobs:
             ```
 
             #### Running on macOS
-            1. Unzip `USBVolumeController-macOS.zip` and move `USBVolumeController.app` to `/Applications`.
+            1. Unzip `USBSoundControl-macOS.zip` and move `USBSoundControl.app` to `/Applications`.
             2. Remove the Gatekeeper quarantine attribute:
                ```bash
-               xattr -cr /Applications/USBVolumeController.app
+               xattr -cr /Applications/USBSoundControl.app
                ```
             3. Grant **Accessibility** permissions under **System Settings > Privacy & Security > Accessibility** when prompted to enable hardware volume keys (F11/F12).
         env:
