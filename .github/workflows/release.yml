@@ -25,7 +25,7 @@ jobs:
         run: |
           xcodebuild clean build \
             -project USBSoundControl_Loopback.xcodeproj \
-            -target USBSoundControl \
+            -scheme USBSoundControl \
             -configuration Release \
             -derivedDataPath ./build \
             ARCHS="arm64 x86_64" \
